@@ -16,9 +16,8 @@ namespace OpenRA.Android
         {
         }
 
-        [DllImport("launcher_jni", EntryPoint = "Java_org_openra_android_NativeBridge_nativeConfigureLaunch")]
-        static extern void NativeConfigureLaunch(
-            IntPtr env, IntPtr thiz, long entryFnPtr, IntPtr jEngineDir, IntPtr jSupportDir, IntPtr jModId);
+        [DllImport("launcher_jni", CallingConvention = CallingConvention.Cdecl)]
+        static extern void openra_set_entry_ptr(long ptr);
 
         [UnmanagedCallersOnly]
         static unsafe int RunOpenRAEngine(byte* engineDirPtr, byte* supportDirPtr, byte* modIdPtr)
@@ -60,8 +59,10 @@ namespace OpenRA.Android
         {
             base.OnCreate();
             Java.Lang.JavaSystem.LoadLibrary("launcher_jni");
-            AndroidEntryRegistry.EntryPointer = GetNativeEntryPointer();
-            Log.Info(Tag, $"Registered OpenRA C# entry pointer: 0x{AndroidEntryRegistry.EntryPointer:X}");
+            long ptr = GetNativeEntryPointer();
+            AndroidEntryRegistry.EntryPointer = ptr;
+            openra_set_entry_ptr(ptr);
+            Log.Info(Tag, $"Registered OpenRA C# entry pointer: 0x{ptr:X}");
         }
     }
 

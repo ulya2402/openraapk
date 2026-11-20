@@ -33,8 +33,7 @@ public class OpenRAGameActivity extends SDLActivity {
         if (modId == null || modId.isEmpty()) {
             modId = "ra";
         }
-        long entryPtr = DotNetBridge.getOpenRAEntryPointer();
-        NativeBridge.nativeConfigureLaunch(entryPtr, engineDir, supportDir, modId);
+        NativeBridge.nativeConfigureLaunch(0L, engineDir, supportDir, modId);
         super.onCreate(savedInstanceState);
     }
 }

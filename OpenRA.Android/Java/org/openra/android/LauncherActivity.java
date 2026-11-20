@@ -58,22 +58,26 @@ public class LauncherActivity extends Activity {
         "Gamepad + Touch Fallback"
     };
 
+    private int resId(String name, String defType) {
+        return getResources().getIdentifier(name, defType, getPackageName());
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_launcher);
+        setContentView(resId("activity_launcher", "layout"));
 
-        txtAbiInfo = findViewById(R.id.txtAbiInfo);
-        txtStatusBadge = findViewById(R.id.txtStatusBadge);
-        txtContentSummary = findViewById(R.id.txtContentSummary);
-        txtImportStatus = findViewById(R.id.txtImportStatus);
-        progressImport = findViewById(R.id.progressImport);
-        btnDownloadFreeware = findViewById(R.id.btnDownloadFreeware);
-        btnImportSaf = findViewById(R.id.btnImportSaf);
-        btnLaunch = findViewById(R.id.btnLaunch);
-        spinnerMod = findViewById(R.id.spinnerMod);
-        spinnerScale = findViewById(R.id.spinnerScale);
-        spinnerInput = findViewById(R.id.spinnerInput);
+        txtAbiInfo = findViewById(resId("txtAbiInfo", "id"));
+        txtStatusBadge = findViewById(resId("txtStatusBadge", "id"));
+        txtContentSummary = findViewById(resId("txtContentSummary", "id"));
+        txtImportStatus = findViewById(resId("txtImportStatus", "id"));
+        progressImport = findViewById(resId("progressImport", "id"));
+        btnDownloadFreeware = findViewById(resId("btnDownloadFreeware", "id"));
+        btnImportSaf = findViewById(resId("btnImportSaf", "id"));
+        btnLaunch = findViewById(resId("btnLaunch", "id"));
+        spinnerMod = findViewById(resId("spinnerMod", "id"));
+        spinnerScale = findViewById(resId("spinnerScale", "id"));
+        spinnerInput = findViewById(resId("spinnerInput", "id"));
 
         txtAbiInfo.setText(NativeBridge.nativeGetAbiInfo());
 

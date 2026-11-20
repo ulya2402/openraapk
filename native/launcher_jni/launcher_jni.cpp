@@ -522,6 +522,10 @@ std::string g_supportDir;
 std::string g_modId = "ra";
 } // namespace
 
+extern "C" void openra_set_entry_ptr(int64_t ptr) {
+    g_openraEntry = reinterpret_cast<OpenRAEntryFn>(static_cast<uintptr_t>(ptr));
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_org_openra_android_NativeBridge_nativeConfigureLaunch(
     JNIEnv* env,
@@ -530,7 +534,9 @@ Java_org_openra_android_NativeBridge_nativeConfigureLaunch(
     jstring jEngineDir,
     jstring jSupportDir,
     jstring jModId) {
-    g_openraEntry = reinterpret_cast<OpenRAEntryFn>(static_cast<uintptr_t>(entryFnPtr));
+    if (entryFnPtr != 0) {
+        g_openraEntry = reinterpret_cast<OpenRAEntryFn>(static_cast<uintptr_t>(entryFnPtr));
+    }
     const char* e = env->GetStringUTFChars(jEngineDir, nullptr);
     const char* s = env->GetStringUTFChars(jSupportDir, nullptr);
     const char* m = env->GetStringUTFChars(jModId, nullptr);
