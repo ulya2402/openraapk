@@ -257,11 +257,12 @@ namespace OpenRA.Platforms.Default
 
 						// Second finger acts as Right Click (move/attack in RTS); primary finger acts as Left Click
 						var numFingers = SDL.SDL_GetNumTouchFingers(e.tfinger.touchId);
+						var sdlButton = (byte)(numFingers >= 2 ? SDL.SDL_BUTTON_RIGHT : SDL.SDL_BUTTON_LEFT);
 						var button = numFingers >= 2 ? MouseButton.Right : MouseButton.Left;
 
 						if (e.type == SDL.SDL_EventType.SDL_FINGERDOWN)
 						{
-							var multiTap = MultiTapDetection.DetectFromMouse(button, pos);
+							var multiTap = MultiTapDetection.DetectFromMouse(sdlButton, pos);
 							inputHandler.OnMouseInput(new MouseInput(
 								MouseInputEvent.Down, button, pos, int2.Zero, mods, multiTap));
 						}
@@ -273,7 +274,7 @@ namespace OpenRA.Platforms.Default
 						}
 						else
 						{
-							var multiTap = MultiTapDetection.InfoFromMouse(button);
+							var multiTap = MultiTapDetection.InfoFromMouse(sdlButton);
 							inputHandler.OnMouseInput(new MouseInput(
 								MouseInputEvent.Up, button, pos, int2.Zero, mods, multiTap));
 						}
