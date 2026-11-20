@@ -1,0 +1,12 @@
+bin/
+obj/
+.vs/
+*.user
+native/third_party/
+native/cmake-build-arm64/
+native/build/
+engine/bin/
+engine/*/bin/
+engine/*/obj/
+OpenRA.Android/bin/
+OpenRA.Android/obj/

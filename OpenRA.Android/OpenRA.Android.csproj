@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>28</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>org.openra.android</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.0-arm64</ApplicationDisplayVersion>
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <RunAOTCompilation Condition="'$(Configuration)' == 'Release'">true</RunAOTCompilation>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Mono.Android.Export" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="MainApplication.cs" />
+    <Compile Include="OpenRAGameActivity.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidJavaSource Include="Java/**/*.java" />
+    <AndroidJavaSource Include="../native/third_party/SDL2/android-project/app/src/main/java/org/libsdl/app/*.java"
+                       Condition="Exists('../native/third_party/SDL2/android-project/app/src/main/java/org/libsdl/app')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidResource Include="Resources/**/*" />
+  </ItemGroup>
+
+  <!-- Native ARM64 libraries built by CMake NDK -->
+  <ItemGroup>
+    <AndroidNativeLibrary Include="../native/build/arm64-v8a/*.so" Abi="arm64-v8a"
+                          Condition="Exists('../native/build/arm64-v8a')" />
+  </ItemGroup>
+
+  <!-- Non-copyrighted OpenRA engine assets (shaders, mod manifests, Lua scripts) -->
+  <ItemGroup>
+    <AndroidAsset Include="../engine/glsl/**/*" Link="Assets/engine/glsl/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../engine/mods/**/*" Link="Assets/engine/mods/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../engine/VERSION" Link="Assets/engine/VERSION" />
+    <AndroidAsset Include="../engine/global mix database.dat" Link="Assets/engine/global mix database.dat" />
+  </ItemGroup>
+
+  <!-- Reference OpenRA engine & mod assemblies -->
+  <ItemGroup>
+    <ProjectReference Include="../engine/OpenRA.Game/OpenRA.Game.csproj" />
+    <ProjectReference Include="../engine/OpenRA.Platforms.Default/OpenRA.Platforms.Default.csproj" />
+    <ProjectReference Include="../engine/OpenRA.Mods.Common/OpenRA.Mods.Common.csproj" />
+    <ProjectReference Include="../engine/OpenRA.Mods.Cnc/OpenRA.Mods.Cnc.csproj" />
+    <ProjectReference Include="../engine/OpenRA.Mods.D2k/OpenRA.Mods.D2k.csproj" />
+  </ItemGroup>
+</Project>

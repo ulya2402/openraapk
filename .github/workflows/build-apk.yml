@@ -1,0 +1,107 @@
+name: Build OpenRA Android ARM64 APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up .NET 10 SDK & Android Workload
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install .NET Android Workload
+        run: dotnet workload install android
+
+      - name: Install Android SDK, NDK 27, and CMake 3.22.1
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
+          SDKMANAGER=$(find "$SDK_ROOT/cmdline-tools" -name "sdkmanager" 2>/dev/null | head -n 1 || true)
+          if [ -z "$SDKMANAGER" ]; then
+            mkdir -p "$SDK_ROOT/cmdline-tools"
+            curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
+            unzip -q cmdline-tools.zip -d "$SDK_ROOT/cmdline-tools"
+            mv "$SDK_ROOT/cmdline-tools/cmdline-tools" "$SDK_ROOT/cmdline-tools/latest"
+            rm cmdline-tools.zip
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Fetch Native Third-Party Dependencies
+        run: |
+          mkdir -p native/third_party
+          cd native/third_party
+          [ -d SDL2 ] || git clone --depth 1 --branch release-2.30.11 https://github.com/libsdl-org/SDL.git SDL2
+          [ -d oboe ] || git clone --depth 1 --branch 1.9.0 https://github.com/google/oboe.git oboe
+          [ -d openal-soft ] || git clone --depth 1 --branch 1.24.2 https://github.com/kcat/openal-soft.git openal-soft
+          [ -d freetype ] || git clone --depth 1 --branch VER-2-13-3 https://gitlab.freedesktop.org/freetype/freetype.git freetype
+          [ -d libchdr ] || git clone --depth 1 https://github.com/rtissera/libchdr.git libchdr
+          if [ ! -d lua-5.1.5 ]; then
+            curl -sSL https://www.lua.org/ftp/lua-5.1.5.tar.gz -o lua-5.1.5.tar.gz
+            tar -xzf lua-5.1.5.tar.gz
+            rm lua-5.1.5.tar.gz
+          fi
+
+      - name: Build Native ARM64 Libraries (CMake + NDK r27)
+        run: |
+          NDK_ROOT="${ANDROID_HOME}/ndk/27.2.12479018"
+          CMAKE_BIN="${ANDROID_HOME}/cmake/3.22.1/bin/cmake"
+          "$CMAKE_BIN" -S native -B native/cmake-build-arm64 \
+            -DCMAKE_TOOLCHAIN_FILE="${NDK_ROOT}/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-28 \
+            -DCMAKE_BUILD_TYPE=Release
+          "$CMAKE_BIN" --build native/cmake-build-arm64 --parallel $(nproc) \
+            --target launcher_jni SDL2 openal freetype lua51
+          mkdir -p native/build/arm64-v8a
+          find native/cmake-build-arm64 -name "*.so" -exec cp -v {} native/build/arm64-v8a/ \;
+
+      - name: Verify Native .so ABI & Dependencies (llvm-readelf)
+        run: |
+          READELF="${ANDROID_HOME}/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+          for LIB in liblauncher_jni.so libSDL2.so libopenal.so libfreetype6.so liblua51.so; do
+            SO_PATH="native/build/arm64-v8a/$LIB"
+            if [ -f "$SO_PATH" ]; then
+              echo "=== $LIB ==="
+              "$READELF" -h "$SO_PATH" | grep -E "Class:|Machine:"
+              "$READELF" -d "$SO_PATH" | grep NEEDED
+            else
+              echo "MISSING: $SO_PATH"
+              exit 1
+            fi
+          done
+
+      - name: Build OpenRA Android ARM64 APK (.NET 10)
+        run: |
+          dotnet publish OpenRA.Android/OpenRA.Android.csproj \
+            -c Release \
+            -f net10.0-android \
+            -r android-arm64 \
+            -p:AndroidSdkDirectory="${ANDROID_HOME}" \
+            -p:AndroidNdkDirectory="${ANDROID_HOME}/ndk/27.2.12479018" \
+            -p:JavaSdkDirectory="${JAVA_HOME}"
+
+      - name: Upload ARM64 APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openra-arm64-v8a-apk
+          path: OpenRA.Android/bin/Release/net10.0-android/android-arm64/publish/*.apk
+          if-no-files-found: error

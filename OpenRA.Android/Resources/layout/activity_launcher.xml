@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#11161A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="OPENRA // ANDROID ARM64"
+                    android:textColor="#F3F4F6"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.06" />
+
+                <TextView
+                    android:id="@+id/txtAbiInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="arm64-v8a (ARMv8-A)"
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp"
+                    android:paddingTop="2dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#262F36"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="NEEDS GAME FILES"
+                android:textColor="#F59E0B"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Two-Column Landscape Layout -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
+
+            <!-- Left Column: BYOF SAF Import & Status -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#1A2228"
+                android:padding="16dp"
+                android:layout_marginEnd="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GAME CONTENT (BYOF)"
+                    android:textColor="#D1D5DB"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/txtContentSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Import original .iso, .chd, or .zip game archive via Android SAF. Assets are verified and stored privately."
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="12dp" />
+
+                <Button
+                    android:id="@+id/btnImportSaf"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:backgroundTint="#2E3B46"
+                    android:text="IMPORT .ISO / .CHD / .ZIP"
+                    android:textColor="#F9FAFB"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <ProgressBar
+                    android:id="@+id/progressImport"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/txtImportStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="No archive imported yet."
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Right Column: Mod & Runtime Settings -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#1A2228"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MOD &amp; RUNTIME CONFIG"
+                    android:textColor="#D1D5DB"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Target Mod"
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp"
+                    android:paddingTop="10dp" />
+
+                <Spinner
+                    android:id="@+id/spinnerMod"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:background="#262F36"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Display Scale"
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp"
+                    android:paddingTop="10dp" />
+
+                <Spinner
+                    android:id="@+id/spinnerScale"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:background="#262F36"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Input Mode"
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp"
+                    android:paddingTop="10dp" />
+
+                <Spinner
+                    android:id="@+id/spinnerInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:background="#262F36"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnLaunch"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="#C84B31"
+                    android:text="LAUNCH OPENRA"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
