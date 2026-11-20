@@ -22,11 +22,8 @@ endif()
 
 # ---------------------------------------------------------------------------
 # 2. Google Oboe + OpenAL-Soft (matches OpenRA-OpenAL-CS: libopenal.so)
+#    Note: openal-soft adds OBOE_SOURCE internally via add_subdirectory().
 # ---------------------------------------------------------------------------
-if(EXISTS "${THIRD_PARTY_DIR}/oboe/CMakeLists.txt")
-    add_subdirectory("${THIRD_PARTY_DIR}/oboe" "${CMAKE_BINARY_DIR}/oboe" EXCLUDE_FROM_ALL)
-endif()
-
 if(EXISTS "${THIRD_PARTY_DIR}/openal-soft/CMakeLists.txt")
     set(LIBTYPE "SHARED" CACHE STRING "" FORCE)
     set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
@@ -94,4 +91,8 @@ if(TARGET chdr-static)
     target_compile_definitions(launcher_jni PRIVATE HAS_LIBCHDR=1)
     target_include_directories(launcher_jni PRIVATE "${THIRD_PARTY_DIR}/libchdr/include")
     target_link_libraries(launcher_jni PRIVATE chdr-static)
+elseif(TARGET chdr)
+    target_compile_definitions(launcher_jni PRIVATE HAS_LIBCHDR=1)
+    target_include_directories(launcher_jni PRIVATE "${THIRD_PARTY_DIR}/libchdr/include")
+    target_link_libraries(launcher_jni PRIVATE chdr)
 endif()

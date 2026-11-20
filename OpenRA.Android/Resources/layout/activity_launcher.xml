@@ -96,11 +96,22 @@
                     android:paddingBottom="12dp" />
 
                 <Button
+                    android:id="@+id/btnDownloadFreeware"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:backgroundTint="#C84B31"
+                    android:text="DOWNLOAD FREEWARE CONTENT"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
                     android:id="@+id/btnImportSaf"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
+                    android:layout_marginTop="8dp"
                     android:backgroundTint="#2E3B46"
-                    android:text="IMPORT .ISO / .CHD / .ZIP"
+                    android:text="IMPORT .ISO / .CHD / .ZIP (SAF)"
                     android:textColor="#F9FAFB"
                     android:textSize="13sp"
                     android:textStyle="bold" />

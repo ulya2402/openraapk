@@ -14,13 +14,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class LauncherActivity extends Activity {
     private static final int REQ_OPEN_DOCUMENT = 1001;
@@ -32,6 +38,7 @@ public class LauncherActivity extends Activity {
     private TextView txtContentSummary;
     private TextView txtImportStatus;
     private ProgressBar progressImport;
+    private Button btnDownloadFreeware;
     private Button btnImportSaf;
     private Button btnLaunch;
     private Spinner spinnerMod;
@@ -61,6 +68,7 @@ public class LauncherActivity extends Activity {
         txtContentSummary = findViewById(R.id.txtContentSummary);
         txtImportStatus = findViewById(R.id.txtImportStatus);
         progressImport = findViewById(R.id.progressImport);
+        btnDownloadFreeware = findViewById(R.id.btnDownloadFreeware);
         btnImportSaf = findViewById(R.id.btnImportSaf);
         btnLaunch = findViewById(R.id.btnLaunch);
         spinnerMod = findViewById(R.id.spinnerMod);
@@ -73,6 +81,7 @@ public class LauncherActivity extends Activity {
         spinnerScale.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, SCALE_VALUES));
         spinnerInput.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, INPUT_MODES));
 
+        btnDownloadFreeware.setOnClickListener(v -> downloadFreewareContent());
         btnImportSaf.setOnClickListener(v -> openSafPicker());
         btnLaunch.setOnClickListener(v -> prepareAndLaunch());
 
@@ -129,7 +138,131 @@ public class LauncherActivity extends Activity {
         }
     }
 
+    private void downloadFreewareContent() {
+        final String modId = MOD_IDS[spinnerMod.getSelectedItemPosition()];
+        final String mirrorListUrl;
+        final File targetDir;
+        if ("ra".equals(modId)) {
+            mirrorListUrl = "https://www.openra.net/packages/ra-quickinstall-mirrors.txt";
+            targetDir = new File(getSupportDir(), "Content/ra/v2");
+        } else if ("cnc".equals(modId)) {
+            mirrorListUrl = "https://www.openra.net/packages/cnc-mirrors.txt";
+            targetDir = new File(getSupportDir(), "Content/cnc");
+        } else if ("d2k".equals(modId)) {
+            mirrorListUrl = "https://www.openra.net/packages/d2k-quickinstall-v3-mirrors.txt";
+            targetDir = new File(getSupportDir(), "Content/d2k");
+        } else {
+            Toast.makeText(this, "Direct freeware quickinstall is available for ra, cnc, and d2k.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        btnDownloadFreeware.setEnabled(false);
+        btnImportSaf.setEnabled(false);
+        btnLaunch.setEnabled(false);
+        progressImport.setVisibility(View.VISIBLE);
+        progressImport.setProgress(0);
+        txtImportStatus.setText("Fetching OpenRA mirror list...");
+
+        executor.execute(() -> {
+            try {
+                String zipUrl = fetchFirstMirrorUrl(mirrorListUrl);
+                if (zipUrl == null || zipUrl.isEmpty()) {
+                    throw new IOException("No mirror URL returned from " + mirrorListUrl);
+                }
+
+                runOnUiThread(() -> txtImportStatus.setText("Downloading " + modId + " freeware package..."));
+
+                HttpURLConnection conn = (HttpURLConnection) new URL(zipUrl).openConnection();
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(30000);
+                conn.setInstanceFollowRedirects(true);
+                int totalBytes = conn.getContentLength();
+
+                if (!targetDir.exists()) {
+                    targetDir.mkdirs();
+                }
+
+                int extractedFiles = 0;
+                try (InputStream rawIn = conn.getInputStream();
+                     ZipInputStream zis = new ZipInputStream(rawIn)) {
+                    ZipEntry entry;
+                    byte[] buf = new byte[16384];
+                    long downloaded = 0;
+                    String canonicalRoot = targetDir.getCanonicalPath() + File.separator;
+
+                    while ((entry = zis.getNextEntry()) != null) {
+                        if (entry.isDirectory()) {
+                            zis.closeEntry();
+                            continue;
+                        }
+                        File outFile = new File(targetDir, entry.getName());
+                        if (!outFile.getCanonicalPath().startsWith(canonicalRoot)) {
+                            throw new IOException("Blocked unsafe ZIP path: " + entry.getName());
+                        }
+                        File parent = outFile.getParentFile();
+                        if (parent != null && !parent.exists()) {
+                            parent.mkdirs();
+                        }
+                        try (FileOutputStream fos = new FileOutputStream(outFile)) {
+                            int n;
+                            while ((n = zis.read(buf)) > 0) {
+                                fos.write(buf, 0, n);
+                                downloaded += n;
+                            }
+                        }
+                        extractedFiles++;
+                        final int countNow = extractedFiles;
+                        final int pct = totalBytes > 0
+                            ? Math.min(99, (int) ((downloaded * 100L) / totalBytes))
+                            : Math.min(95, 10 + countNow * 2);
+                        final String nameNow = entry.getName();
+                        runOnUiThread(() -> {
+                            progressImport.setProgress(pct);
+                            txtImportStatus.setText("Extracting: " + nameNow);
+                        });
+                        zis.closeEntry();
+                    }
+                }
+
+                final int finalCount = extractedFiles;
+                runOnUiThread(() -> {
+                    btnDownloadFreeware.setEnabled(true);
+                    btnImportSaf.setEnabled(true);
+                    btnLaunch.setEnabled(true);
+                    progressImport.setProgress(100);
+                    txtImportStatus.setText("Downloaded & ready (" + finalCount + " files).");
+                    refreshContentStatus();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    btnDownloadFreeware.setEnabled(true);
+                    btnImportSaf.setEnabled(true);
+                    btnLaunch.setEnabled(true);
+                    txtImportStatus.setText("Download failed: " + e.getMessage());
+                    Toast.makeText(this, "Download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private static String fetchFirstMirrorUrl(String listUrl) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) new URL(listUrl).openConnection();
+        conn.setConnectTimeout(15000);
+        conn.setReadTimeout(15000);
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("http://") || line.startsWith("https://")) {
+                    return line;
+                }
+            }
+        }
+        return null;
+    }
+
     private void importFromSafUri(Uri uri) {
+        btnDownloadFreeware.setEnabled(false);
         btnImportSaf.setEnabled(false);
         btnLaunch.setEnabled(false);
         progressImport.setVisibility(View.VISIBLE);
@@ -162,6 +295,7 @@ public class LauncherActivity extends Activity {
 
     private void postImportResult(String result) {
         runOnUiThread(() -> {
+            btnDownloadFreeware.setEnabled(true);
             btnImportSaf.setEnabled(true);
             btnLaunch.setEnabled(true);
             if (result != null && result.startsWith("OK|")) {
