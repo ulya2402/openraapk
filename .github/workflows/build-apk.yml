@@ -70,7 +70,7 @@ jobs:
             -DANDROID_PLATFORM=android-28 \
             -DCMAKE_BUILD_TYPE=Release
           "$CMAKE_BIN" --build native/cmake-build-arm64 --parallel $(nproc) \
-            --target launcher_jni SDL2 openal freetype lua51
+            --target launcher_jni SDL2 OpenAL freetype lua51
           mkdir -p native/build/arm64-v8a
           find native/cmake-build-arm64 -name "*.so" -exec cp -v {} native/build/arm64-v8a/ \;
 

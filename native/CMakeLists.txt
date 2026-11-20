@@ -32,6 +32,9 @@ if(EXISTS "${THIRD_PARTY_DIR}/openal-soft/CMakeLists.txt")
     set(ALSOFT_BACKEND_OBOE ON CACHE BOOL "" FORCE)
     set(OBOE_SOURCE "${THIRD_PARTY_DIR}/oboe" CACHE PATH "" FORCE)
     add_subdirectory("${THIRD_PARTY_DIR}/openal-soft" "${CMAKE_BINARY_DIR}/openal" EXCLUDE_FROM_ALL)
+    if(TARGET OpenAL)
+        set_target_properties(OpenAL PROPERTIES OUTPUT_NAME "openal")
+    endif()
 endif()
 
 # ---------------------------------------------------------------------------
